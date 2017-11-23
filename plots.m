@@ -6,22 +6,22 @@ FPoA = [1 0 0];
 Re = 6371e3;
 mu = 3.986004418e14;
 
-Pe = 4*Re;
-Ap = 270*Re;
+Pe = 400e3+Re;
+Ap = 900e3+Re;
 
 e = (Ap - Pe)/(Ap + Pe);
 
 k.a = 0.5*(Pe+Ap);
 k.e = e;
-k.i = degtorad(0);
+k.i = degtorad(15);
 k.o = degtorad(90);
 k.w = degtorad(60);
-k.M0 = degtorad(90);
+k.M0 = degtorad(0);
 
 Tau = 2 * pi * sqrt(k.a^3/mu);
 
 T = 10;
-nt = 500;
+nt = 250;
 dt = T/nt;
 
 %{
@@ -38,18 +38,20 @@ dt = KT.*cos(pi/2.1/Vm*linspace(0, T, nt));
 dTau = KTau.*cos(pi/2.1/Vm*linspace(0, Tau, nt));
 %}
 
-p = [];
+p = zeros(nt, 6);
 
 disp('Calculating s/c path...');
 
 tic;
 lastsize = 0;
-for t = nonLinspace(0, Tau, nt, 'cos');
+i = 1;
+for t = nonLinspace(0, Tau, nt, 'cos')
     [r, V] = keptocart(k, t, mu);
-    p = [p; r' V'];
+    p(i,:) = [r(1) r(2) r(3) V(1) V(2) V(3)];
     per = 100*t/Tau;
     fprintf(repmat('\b', 1, lastsize));
-    lastsize = fprintf('%1.1f%%', per);
+    lastsize = fprintf('%1.2f%%', per);
+    i = i + 1;
 end
 fprintf('\nCalculation took %fs\n', toc);
 
@@ -64,17 +66,22 @@ grid on
 
 sc = animatedline('Color', 'r', 'Marker', 'o');
 
-a = tic;
-for i = 1:1:(length(p)-1)
-    r = double(p(i,1:3));
-    clearpoints(sc);
-    addpoints(sc, r(1), r(2), r(3));
-    b = toc(a);
-    if (b > dt)
-        drawnow
-        a = tic;
+p = double(p);
+
+while 1
+    a = tic;
+    for i = 1:1:(length(p)-1)
+        clearpoints(sc);
+        addpoints(sc, p(i,1), p(i,2), p(i,3));
+        b = toc(a);
+        if (b > dt)
+            drawnow
+            a = tic;
+        end
+    end
+    if ~ishghandle(ax)
+        break
     end
 end
-
 
 

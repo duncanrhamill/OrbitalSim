@@ -11,7 +11,7 @@ function [r, V] = keptocart(kep, t, mu)
     end
         
     syms E;
-    Et = vpasolve(Mt == E - kep.e*sin(E), E);
+    Et = vpasolve(vpa(Mt == E - kep.e*sin(E)), E);
     vt = 2 * atan2(sqrt(1 + kep.e)*sin(Et/2), sqrt(1 - kep.e)*cos(Et/2));
     rc = kep.a*(1 - kep.e*cos(Et));
     
